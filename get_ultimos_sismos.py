@@ -1,21 +1,37 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 import json
+from decimal import Decimal
+
+# Función helper para convertir Decimal a tipos serializables
+def decimal_to_native(obj):
+    if isinstance(obj, list):
+        return [decimal_to_native(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: decimal_to_native(v) for k, v in obj.items()}
+    elif isinstance(obj, Decimal):
+        # Convertir Decimal a int o float según corresponda
+        if obj % 1 == 0:
+            return int(obj)
+        else:
+            return float(obj)
+    else:
+        return obj
 
 def lambda_handler(event, context):
     try:
-        # Conectamos a DynamoDB
+
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('TablaSismosIGP')
+        table = dynamodb.Table('TablaUltimosSismosIGP')
         
-        # Obtener query parameter para cantidad (por default: 10)
+        # Obtener query parameter para cantidad (por default en 10)
         query_params = event.get('queryStringParameters', {}) or {}
         limite = int(query_params.get('limite', 10))
         
         response = table.scan()
         items = response['Items']
         
-        # Continuamo escaneando si hay más páginas
+        # Continuar escaneando si hay más páginas
         while 'LastEvaluatedKey' in response:
             response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             items.extend(response['Items'])
@@ -23,8 +39,10 @@ def lambda_handler(event, context):
         # Ordenar por número (descendente) para obtener los más recientes
         items_ordenados = sorted(items, key=lambda x: int(x.get('numero', 0)), reverse=True)
         
-        # Tomar los últimos N sismos
         ultimos_sismos = items_ordenados[:limite]
+        
+        # Convertir Decimals a tipos nativos para evitar errores
+        ultimos_sismos = decimal_to_native(ultimos_sismos)
         
         return {
             'statusCode': 200,
