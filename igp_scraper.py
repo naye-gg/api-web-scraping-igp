@@ -62,11 +62,29 @@ def lambda_handler(event, context):
                     item = {
                         'id': str(uuid.uuid4()),
                         'numero': idx,
+                        'codigo': sismo.get('codigo', ''),
+                        'reporte_acelerometrico_pdf': sismo.get('reporte_acelerometrico_pdf', ''),
+                        'idlistasismos': str(sismo.get('idlistasismos', '')),
+                        'fecha_local': sismo.get('fecha_local', ''),
+                        'hora_local': sismo.get('hora_local', ''),
+                        'fecha_utc': sismo.get('fecha_utc', ''),
+                        'hora_utc': sismo.get('hora_utc', ''),
                         'latitud': str(sismo.get('latitud', '')),
                         'longitud': str(sismo.get('longitud', '')),
-                        'profundidad': str(sismo.get('profundidad', '')),
                         'magnitud': str(sismo.get('magnitud', '')),
+                        'profundidad': str(sismo.get('profundidad', '')),
                         'referencia': sismo.get('referencia', ''),
+                        'referencia2': sismo.get('referencia2', ''),
+                        'referencia3': sismo.get('referencia3', ''),
+                        'tipomagnitud': sismo.get('tipomagnitud', ''),
+                        'mapa': sismo.get('mapa', ''),
+                        'informe': sismo.get('informe', ''),
+                        'publicado': sismo.get('publicado', ''),
+                        'numero_reporte': str(sismo.get('numero_reporte', '')),
+                        'id_pdf_tematico': str(sismo.get('id_pdf_tematico', '')),
+                        'createdAt': sismo.get('createdAt', ''),
+                        'updatedAt': sismo.get('updatedAt', ''),
+                        'intensidad': sismo.get('intensidad', '')
                     }
                     
                     # Guardar en DynamoDB usando batch_writer
