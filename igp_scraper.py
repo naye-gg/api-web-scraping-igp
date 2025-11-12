@@ -18,7 +18,8 @@ def lambda_handler(event, context):
     
     try:
         # Realizar la solicitud HTTP a la API
-        response = requests.get(url, headers=headers)
+        response = requests.get(url)
+        #response = requests.get(url, headers=headers)
         
         if response.status_code != 200:
             return {
