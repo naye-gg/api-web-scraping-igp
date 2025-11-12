@@ -30,7 +30,6 @@ functions:
           path: /scrape/sismos/ultimos
           method: get
           cors: true
-          integration: lambda
 resources:
   Resources:
     TablaSismosIGP:
