@@ -19,14 +19,15 @@ def decimal_to_native(obj):
 
 def lambda_handler(event, context):
     try:
-        # Conectar a DynamoDB
+
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('TablaSismosIGP')
         
-        # Obtener query parameter para cantidad ( por default en 10)
+        # Obtener query parameter para cantidad (por default en 10)
         query_params = event.get('queryStringParameters', {}) or {}
         limite = int(query_params.get('limite', 10))
         
+        # Escanear toda la tabla
         response = table.scan()
         items = response['Items']
         
@@ -35,10 +36,8 @@ def lambda_handler(event, context):
             response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             items.extend(response['Items'])
         
-        # Ordenar por número (descendente) para obtener los más recientes
         items_ordenados = sorted(items, key=lambda x: int(x.get('numero', 0)), reverse=True)
         
-        # Tomar los últimos N sismos
         ultimos_sismos = items_ordenados[:limite]
         
         # Convertir Decimals a tipos nativos
@@ -54,7 +53,7 @@ def lambda_handler(event, context):
                 'mensaje': f'Últimos {len(ultimos_sismos)} sismos',
                 'total': len(ultimos_sismos),
                 'sismos': ultimos_sismos
-            }, ensure_ascii=False)
+            }, ensure_ascii=False, default=str)
         }
     
     except Exception as e:
