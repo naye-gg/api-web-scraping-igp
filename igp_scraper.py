@@ -84,4 +84,4 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': f'Error en el procesamiento: {str(e)}'
         }
-        
+    

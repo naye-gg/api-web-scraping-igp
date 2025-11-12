@@ -10,7 +10,7 @@ provider:
     role: arn:aws:iam::306083006368:role/LabRole
 functions:
   scrape_sismos:
-    handler: scrap_sismos_igp.lambda_handler
+    handler: igp_scraper.lambda_handler
     package:
       include:
         - ./**  # Incluir todo el contenido del directorio
