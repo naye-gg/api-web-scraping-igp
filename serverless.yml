@@ -5,7 +5,7 @@ provider:
   runtime: python3.13
   # Default memory size for functions (default: 1024MB)
   memorySize: 1024
-  timeout: 20
+  timeout: 30
   iam:
     role: arn:aws:iam::306083006368:role/LabRole
 functions:
@@ -17,6 +17,17 @@ functions:
     events:
       - http:
           path: /scrape/sismos
+          method: get
+          cors: true
+          integration: lambda
+  get_ultimos_sismos:
+    handler: get_ultimos_sismos.lambda_handler
+    package:
+      include:
+        - ./**
+    events:
+      - http:
+          path: /sismos/ultimos
           method: get
           cors: true
           integration: lambda
