@@ -20,17 +20,6 @@ functions:
           method: get
           cors: true
           integration: lambda
-  sync_ultimos_sismos:
-    handler: sync_ultimos_sismos.lambda_handler
-    package:
-      include:
-        - ./**
-    events:
-      - http:
-          path: /sismos/sync
-          method: get
-          cors: true
-          integration: lambda
   get_ultimos_sismos:
     handler: get_ultimos_sismos.lambda_handler
     package:
@@ -48,17 +37,6 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: TablaSismosIGP
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-    TablaUltimosSismosIGP:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: TablaUltimosSismosIGP
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
