@@ -1,12 +1,13 @@
 import requests
 import boto3
 import uuid
+from datetime import datetime
 
 def lambda_handler(event, context):
     # URL de la API del IGP
     url = "https://ultimosismo.igp.gob.pe/api/ultimo-sismo/ajaxb/2025"
     
-    # Headers necesarios para la solicitud
+     # Headers necesarios para la solicitud
     #headers = {
     #    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0',
     #    'Accept': 'application/json, text/plain, */*',
@@ -17,8 +18,7 @@ def lambda_handler(event, context):
     
     try:
         # Realizar la solicitud HTTP a la API
-        #response = requests.get(url, headers=headers)
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         
         if response.status_code != 200:
             return {
@@ -49,33 +49,42 @@ def lambda_handler(event, context):
                     }
                 )
         
-        # Insertar los nuevos datos
+        # Insertar los nuevos datos usando batch_writer correctamente
         items_guardados = []
-        for idx, sismo in enumerate(sismos_data, start=1):
-            # Crear item con los campos del sismo
-            item = {
-                'id': str(uuid.uuid4()),
-                'numero': idx,
-                'fecha_hora': sismo.get('fecha_hora_utc', ''),
-                'latitud': str(sismo.get('latitud', '')),
-                'longitud': str(sismo.get('longitud', '')),
-                'profundidad': str(sismo.get('profundidad', '')),
-                'magnitud': str(sismo.get('magnitud', '')),
-                'referencia': sismo.get('referencia', ''),
-                'fecha_corte': sismo.get('fecha_corte', '')
-            }
-            
-            # Guardar en DynamoDB
-            table.put_item(Item=item)
-            items_guardados.append(item)
+        items_procesados = 0
+        
+        # Procesar en batches de 25 (límite de DynamoDB)
+        with table.batch_writer() as batch:
+            for idx, sismo in enumerate(sismos_data, start=1):
+                try:
+                    # Crear item con los campos del sismo
+                    item = {
+                        'id': str(uuid.uuid4()),
+                        'numero': idx,
+                        'latitud': str(sismo.get('latitud', '')),
+                        'longitud': str(sismo.get('longitud', '')),
+                        'profundidad': str(sismo.get('profundidad', '')),
+                        'magnitud': str(sismo.get('magnitud', '')),
+                        'referencia': sismo.get('referencia', ''),
+                    }
+                    
+                    # Guardar en DynamoDB usando batch_writer
+                    batch.put_item(Item=item)
+                    items_guardados.append(item)
+                    items_procesados += 1
+                    
+                except Exception as e:
+                    print(f"Error al guardar sismo {idx}: {str(e)}")
+                    continue
         
         # Retornar el resultado
         return {
             'statusCode': 200,
             'body': {
-                'mensaje': f'Se guardaron {len(items_guardados)} sismos exitosamente',
-                'total_sismos': len(items_guardados),
-                'datos': items_guardados
+                'mensaje': f'Se guardaron {items_procesados} sismos exitosamente de {len(sismos_data)} totales',
+                'total_sismos_api': len(sismos_data),
+                'total_guardados': items_procesados,
+                'muestra_datos': items_guardados[:10]  # Solo primeros 10 para no sobrecargar la respuesta
             }
         }
     
@@ -84,4 +93,3 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': f'Error en el procesamiento: {str(e)}'
         }
-    
